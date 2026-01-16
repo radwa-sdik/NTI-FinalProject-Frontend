@@ -18,7 +18,8 @@
             <input type="text" placeholder="Search products..." [(ngModel)]="searchTerm"
                 (ngModelChange)="applyFilters(searchTerm, categoryFilter)" />
         </div>
-        <select class="category-filter" [(ngModel)]="categoryFilter" (ngModelChange)="applyFilters(searchTerm, categoryFilter)">
+        <select class="category-filter" [(ngModel)]="categoryFilter"
+            (ngModelChange)="applyFilters(searchTerm, categoryFilter)">
             <option value="">All Categories</option>
             @for(cat of categories$ | async; track cat._id){
             <option [value]="cat._id">{{ cat.name }}</option>
@@ -39,7 +40,7 @@
     }
 
     <!-- Products Table -->
-    <div class="products-section" *ngIf="filteredProducts$ | async as products">
+    <div class="products-section" *ngIf="products$ | async as products">
         @if(products.length > 0){
         <table class="products-table">
             <thead>
@@ -57,9 +58,12 @@
                 @for(product of products; track product.id || $index){
                 <tr class="product-row">
                     <td class="img-cell">
-                        <img *ngIf="product.productImages?.length"
+                        <!-- <img *ngIf="product.productImages?.length"
                             [src]="imageBaseUrl + product.productImages[0].imageUrl" [alt]="product.name"
-                            class="product-img" />
+                            class="product-img" /> -->
+                        <img *ngIf="product.productImages.length > 0" [src]="product.productImages[0].imageUrl"
+                            [alt]="product.name" class="product-img" />
+
 
                     </td>
                     <td class="name-cell">{{ product.name }}</td>
@@ -175,7 +179,7 @@
                     <input type="file" (change)="onImageSelected($event)" accept="image/*">
                     @if(imagePreviewUrl){
                     <div class="image-preview">
-                        <img [src]="imagePreviewUrl" alt="Image Preview">
+                        <img *ngIf="imagePreviewUrl" [src]="imagePreviewUrl" alt="Image Preview">
                     </div>
                     }
                 </div>

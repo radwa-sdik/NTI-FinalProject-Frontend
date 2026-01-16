@@ -2,9 +2,11 @@
 <div class="product-card">
     <!-- Image Container -->
     <div class="product-image-container">
-        <img *ngIf="product.productImages?.length"
+        <!-- <img *ngIf="product.productImages?.length"
                             [src]="imageBaseUrl + product.productImages[0].imageUrl" [alt]="product.name"
-                            class="product-img" style="width: 100%; height: auto;"/>
+                            class="product-img" style="width: 100%; height: auto;"/> -->
+                            <img *ngIf="product.productImages.length > 0"
+                            [src]="product.productImages[0].imageUrl" [alt]="product.name" class="product-img" style="width: 100%; height: auto;"/>
         <div class="product-overlay">
             <button class="btn-add-cart" title="Add to Cart" (click)="addToCart(product)">
                 <i class="bi bi-cart-plus"></i>

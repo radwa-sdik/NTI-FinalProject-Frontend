@@ -13,8 +13,10 @@
         <!-- Image Section -->
         <div class="product-image-section">
             <div class="main-image-container">
-                <img *ngIf="product.productImages?.length" [src]="imageBaseUrl + product.productImages[0].imageUrl"
-                    [alt]="product.name" class="product-img" style="width: 100%; height: auto;" />
+                <!-- <img *ngIf="product.productImages?.length" [src]="imageBaseUrl + product.productImages[0].imageUrl"
+                    [alt]="product.name" class="product-img" style="width: 100%; height: auto;" /> -->
+                    <img *ngIf="product.productImages.length > 0"
+                            [src]="product.productImages[0].imageUrl" [alt]="product.name" class="product-img" style="width: 100%; height: auto;"/>
                 <div *ngIf="!product.inStock" class="out-of-stock-overlay">Out of Stock</div>
 
                 <span *ngIf="product.quantity <= 5 && product.quantity > 0" class="stock-badge">
@@ -142,26 +144,103 @@
             }@else if(activeTab === 'reviews'){
             <div class="tab-pane">
                 <h4>Customer Reviews</h4>
+                
+                <!-- Messages -->
+                @if(successMessage){
+                <div class="alert alert-success">
+                    <i class="bi bi-check-circle"></i> {{ successMessage }}
+                </div>
+                }
+                @if(errorMessage){
+                <div class="alert alert-error">
+                    <i class="bi bi-exclamation-circle"></i> {{ errorMessage }}
+                </div>
+                }
+
+                <!-- Add Review Button -->
+                <div class="review-actions">
+                    <button class="btn-write-review" (click)="openReviewForm()">
+                        <i class="bi bi-pencil-square"></i> Write a Review
+                    </button>
+                </div>
+
+                <!-- Review Form -->
+                @if(showReviewForm){
+                <div class="review-form-container">
+                    <h5>{{ isEditingReview ? 'Edit Your Review' : 'Add a Review' }}</h5>
+                    <form [formGroup]="reviewForm" (ngSubmit)="submitReview()" class="review-form">
+                        <!-- Rating -->
+                        <div class="form-group">
+                            <label>Rating *</label>
+                            <div class="rating-input">
+                                @for(i of [1,2,3,4,5]; track i){
+                                <button type="button" 
+                                    class="star-btn"
+                                    [class.active]="reviewForm.value.rating >= i"
+                                    (click)="reviewForm.patchValue({rating: i})">
+                                    <i class="bi bi-star-fill"></i>
+                                </button>
+                                }
+                            </div>
+                            <small>Selected: {{ reviewForm.value.rating }} / 5</small>
+                        </div>
+
+                        <!-- Comment -->
+                        <div class="form-group">
+                            <label>Your Review *</label>
+                            <textarea formControlName="comment" 
+                                placeholder="Share your thoughts about this product (minimum 10 characters)"
+                                rows="5"></textarea>
+                            @if(reviewForm.get('comment')?.invalid && reviewForm.get('comment')?.touched){
+                            <span class="error">Review must be at least 10 characters</span>
+                            }
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="form-actions">
+                            <button type="submit" class="btn-submit" [disabled]="reviewForm.invalid">
+                                <i class="bi bi-check-circle"></i> {{ isEditingReview ? 'Update Review' : 'Post Review' }}
+                            </button>
+                            <button type="button" class="btn-cancel" (click)="closeReviewForm()">
+                                <i class="bi bi-x-circle"></i> Cancel
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                }
+
+                <!-- Reviews List -->
                 <div class="reviews-container">
-                    @for(review of product.reviews; track review._id || $index){
+                    @for(review of reviews$ | async; track review._id || $index){
                     <div class="review-card">
                         <div class="review-header">
-                            <span class="review-user">{{ review.userId.firstName }} {{ review.userId.lastName }}</span>
-                            <div class="review-rating">
-                                @for(i of [1,2,3,4,5]; track i){
-                                @if(i <= review.rating){ <i class="bi bi-star-fill"></i>
-                                    }@else{
-                                    <i class="bi bi-star"></i>
-                                    }
-                                    }
+                            <div class="reviewer-info">
+                                <span class="review-user">{{ review.userId.email }}</span>
+                                <span class="review-date">{{ review.createdAt | date:'mediumDate' }}</span>
                             </div>
+                            @if(isUserReview(review)){
+                            <div class="review-actions-btn">
+                                <button class="btn-edit" (click)="openEditReview(review)" title="Edit">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn-delete" (click)="deleteReview(review._id)" title="Delete">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                            }
+                        </div>
+                        <div class="review-rating">
+                            @for(i of [1,2,3,4,5]; track i){
+                            @if(i <= review.rating){ <i class="bi bi-star-fill"></i>
+                                }@else{
+                                <i class="bi bi-star"></i>
+                                }
+                                }
                         </div>
                         <p class="review-comment">{{ review.comment }}</p>
-                        <span class="review-date">{{ review.createdAt | date:'mediumDate' }}</span>
                     </div>
                     }@empty{
                     <p class="no-reviews">No reviews yet. Be the first to review this product!</p>
-                    <button class="btn-write-review">Write a Review</button>
                     }
                 </div>
             </div>

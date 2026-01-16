@@ -31,12 +31,12 @@ export class UserCart {
   }
 
   ngOnInit() {
+    this._cartService.loadCart().subscribe();
     this.loadCart();
   }
 
   loadCart() {
-    // this.userCart$ = this._cartService.cart$;
-    this.userCart$ = this._cartService.getCart();
+    this.userCart$ = this._cartService.cart$;
   }
 
   calculateSubtotal(items: CartItem[]): number {
@@ -67,9 +67,7 @@ export class UserCart {
     this._cartService.removeFromCart(productId).subscribe({
       next: () => {
         this.successMessage = 'Item removed from cart';
-
         setTimeout(() => this.clearMessages(), 2000);
-        this.loadCart();
       },
       error: () => {
         this.errorMessage = 'Failed to remove item';

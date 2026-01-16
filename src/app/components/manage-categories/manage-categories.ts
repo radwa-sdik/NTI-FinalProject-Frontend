@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CategoryService } from '../../services/category-service';
 import { AuthService } from '../../services/auth-service';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { Category } from '../../models/category';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormControl } from '@angular/forms';
@@ -14,8 +14,7 @@ import { AsyncPipe } from '@angular/common';
   styleUrl: './manage-categories.css',
 })
 export class ManageCategories {
-  categories$!: Observable<Category[]>;
-  filteredCategories$!: Observable<Category[]>;
+  categories$: Observable<Category[]>;
   userRole$: Observable<string | null>;
 
   searchTerm: string = '';
@@ -32,6 +31,7 @@ export class ManageCategories {
     private _categoryService: CategoryService,
     private _authService: AuthService,
   ) {
+    this.categories$ = this._categoryService.categories$;
     this.userRole$ = this._authService.userRole$;
     this.categoryForm = new FormGroup({
       name: new FormControl('', Validators.required),
@@ -45,25 +45,22 @@ export class ManageCategories {
   }
 
   loadCategories() {
-    this.categories$ = this._categoryService.getAllCategories();
-    this.filteredCategories$ = this.categories$;
+    this._categoryService.loadCategories().subscribe();
   }
 
   applyFilters(searchTerm: string): void {
     if (!searchTerm.trim()) {
-      this.filteredCategories$ = this.categories$;
+      this.categories$ = this._categoryService.categories$;
       return;
     }
 
-    this.categories$.subscribe((categories) => {
-      const filtered = categories.filter(cat =>
-        cat.name.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-      this.filteredCategories$ = new Observable(observer => {
-        observer.next(filtered);
-        observer.complete();
-      });
-    });
+    this.categories$ = this._categoryService.categories$.pipe(
+      map(categories =>
+        categories.filter(cat =>
+          cat.name.toLowerCase().includes(searchTerm.toLowerCase())
+        )
+      )
+    );
   }
 
   openAddModal() {
@@ -111,7 +108,6 @@ export class ManageCategories {
             this.successMessage = 'Category updated successfully!';
             setTimeout(() => {
               this.closeModal();
-              this.loadCategories();
             }, 1500);
           },
           error: () => {
@@ -124,7 +120,6 @@ export class ManageCategories {
           this.successMessage = 'Category added successfully!';
           setTimeout(() => {
             this.closeModal();
-            this.loadCategories();
           }, 1500);
         },
         error: () => {
@@ -142,9 +137,6 @@ export class ManageCategories {
     this._categoryService.deleteCategory(categoryId).subscribe({
       next: () => {
         this.successMessage = 'Category deleted successfully!';
-        setTimeout(() => {
-          this.loadCategories();
-        }, 1500);
       },
       error: (err) => {
         this.errorMessage = 'Failed to delete category. Please try again.';

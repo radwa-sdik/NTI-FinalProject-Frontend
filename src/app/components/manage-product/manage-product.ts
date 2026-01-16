@@ -16,8 +16,7 @@ import { AuthService } from '../../services/auth-service';
   styleUrl: './manage-product.css',
 })
 export class ManageProduct implements OnInit {
-  products$!: Observable<Product[]>;
-  filteredProducts$!: Observable<Product[]>;
+  products$: Observable<Product[]>;
   categories$: Observable<Category[]>;
   userRole$: Observable<string | null>;
 
@@ -41,6 +40,7 @@ export class ManageProduct implements OnInit {
     private _categoryService: CategoryService,
     private _authService: AuthService
   ) {
+    this.products$ = this._productService.products$;
     this.categories$ = this._categoryService.getAllCategories();
     this.userRole$ = this._authService.userRole$;
     this.productForm = new FormGroup({
@@ -59,13 +59,12 @@ export class ManageProduct implements OnInit {
 
 
   loadProducts() {
-    this.products$ = this._productService.getAllProducts(null, null, null, null, [], 1, 100);
-    this.filteredProducts$ = this.products$;
+    this._productService.loadProducts(null, null, null, null, [], 1, 100).subscribe();
   }
 
   applyFilters(searchTerm: string, categoryFilter: string): void {
-    this.products$ = this._productService.getAllProducts(searchTerm, null, null, null, [categoryFilter], 1, 100);
-    this.filteredProducts$ = this.products$;
+    const categories = categoryFilter ? [categoryFilter] : [];
+    this._productService.loadProducts(searchTerm || null, null, null, null, categories, 1, 100).subscribe();
   }
 
   onImageSelected(event: Event) {
@@ -107,7 +106,9 @@ export class ManageProduct implements OnInit {
       category: (product as any).category?._id || product.category,
     });
 
-    this.imagePreviewUrl = this.imageBaseUrl + (product.productImages[0].imageUrl || '');
+    this.imagePreviewUrl =
+  this.imageBaseUrl + (product.productImages?.[0]?.imageUrl ?? '');
+
     this.showModal = true;
     this.clearMessages();
   }
@@ -119,68 +120,62 @@ export class ManageProduct implements OnInit {
     this.currentEditingProduct = null;
   }
 
-  private buildFormData(): Promise<FormData> {
-    return new Promise((resolve) => {
-      const formData = new FormData();
+  // private buildFormData(): Promise<FormData> {
+  //   return new Promise((resolve) => {
+  //     const formData = new FormData();
 
-      formData.append('name', this.productForm.value.name);
-      formData.append('description', this.productForm.value.description);
-      formData.append('price', this.productForm.value.price.toString());
-      formData.append('quantity', this.productForm.value.quantity.toString());
-      formData.append('category', this.productForm.value.category);
+  //     formData.append('name', this.productForm.value.name);
+  //     formData.append('description', this.productForm.value.description);
+  //     formData.append('price', this.productForm.value.price.toString());
+  //     formData.append('quantity', this.productForm.value.quantity.toString());
+  //     formData.append('category', this.productForm.value.category);
 
-      if (this.selectedImageFile) {
-        // Convert file to base64
-        const reader = new FileReader();
-        reader.onload = () => {
-          const base64String = reader.result as string;
-          formData.append('productImage', base64String);
-          resolve(formData);
-        };
-        reader.readAsDataURL(this.selectedImageFile);
-      } else {
-        resolve(formData);
-      }
-    });
-  }
+  //     if (this.selectedImageFile) {
+  //       // Convert file to base64
+  //       const reader = new FileReader();
+  //       reader.onload = () => {
+  //         const base64String = reader.result as string;
+  //         formData.append('productImage', base64String);
+  //         resolve(formData);
+  //       };
+  //       reader.readAsDataURL(this.selectedImageFile);
+  //     } else {
+  //       resolve(formData);
+  //     }
+  //   });
+  // }
 
 
   saveProduct() {
     if (this.productForm.invalid) return;
 
-    this.buildFormData().then((formData) => {
-      if (this.isEditMode && this.currentEditingProduct) {
-        this._productService
-          .updateProduct(this.currentEditingProduct.id!, formData)
-          .subscribe({
-            next: () => {
-              this.successMessage = 'Product updated successfully!';
-              setTimeout(() => {
-                this.closeModal();
-                this.loadProducts();
-              }, 1500);
-            },
-            error: () => {
-              this.errorMessage = 'Failed to update product.';
-            }
-          });
+    const payload = {
+      ...this.productForm.value,
+      productImages: this.imagePreviewUrl
+        ? [{ imageUrl: this.imagePreviewUrl, isMain: true }]
+        : []
+    };
 
-      } else {
-        this._productService.addProduct(formData).subscribe({
-          next: () => {
-            this.successMessage = 'Product added successfully!';
-            setTimeout(() => {
-              this.closeModal();
-              this.loadProducts();
-            }, 1500);
-          },
-          error: () => {
-            this.errorMessage = 'Failed to add product.';
-          }
-        });
-      }
-    });
+    if (this.isEditMode && this.currentEditingProduct) {
+      this._productService.updateProduct(this.currentEditingProduct.id!, payload).subscribe({
+        next: () => {
+          this.successMessage = 'Product updated successfully!';
+          this.closeModal();
+        },
+        error: () => this.errorMessage = 'Failed to update product'
+      });
+      return;
+    } else {
+      this._productService.addProduct(payload).subscribe({
+        next: () => {
+          this.successMessage = 'Product added successfully!';
+          this.closeModal();
+        },
+        error: () => this.errorMessage = 'Failed to add product'
+      });
+    }
   }
+
 
 
   deleteProduct(productId: string | undefined) {
@@ -191,9 +186,6 @@ export class ManageProduct implements OnInit {
     this._productService.deleteProduct(productId).subscribe({
       next: () => {
         this.successMessage = 'Product deleted successfully!';
-        setTimeout(() => {
-          this.loadProducts();
-        }, 1500);
       },
       error: (err) => {
         this.errorMessage = 'Failed to delete product. Please try again.';

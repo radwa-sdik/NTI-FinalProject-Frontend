@@ -1,7 +1,7 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Product } from '../models/product';
-import { map, Observable, tap } from 'rxjs';
+import { map, Observable, tap, BehaviorSubject, switchMap } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
@@ -9,7 +9,58 @@ import { map, Observable, tap } from 'rxjs';
 export class ProductService {
   private apiUrl = "https://nti-final-project-backend.onrender.com/api/products";
 
+  // State management with BehaviorSubject
+  private productsSubject = new BehaviorSubject<Product[]>([]);
+  public products$ = this.productsSubject.asObservable();
+
+  private filterStateSubject = new BehaviorSubject<{
+    name: string | null;
+    minPrice: number | null;
+    maxPrice: number | null;
+    inStock: boolean | null;
+    categories: string[];
+    page: number;
+    limit: number;
+  }>({
+    name: null,
+    minPrice: null,
+    maxPrice: null,
+    inStock: null,
+    categories: [],
+    page: 1,
+    limit: 100
+  });
+
   constructor(private _httpClient: HttpClient){}
+
+  // Load products based on filters
+  loadProducts(
+    name: string | null = null,
+    minPrice: number | null = null,
+    maxPrice: number | null = null,
+    inStock: boolean | null = null,
+    categories: string[] = [],
+    page: number = 1,
+    limit: number = 100
+  ): Observable<Product[]> {
+    const filterState = {
+      name,
+      minPrice,
+      maxPrice,
+      inStock,
+      categories,
+      page,
+      limit
+    };
+    this.filterStateSubject.next(filterState);
+
+    return this.getAllProducts(name, minPrice, maxPrice, inStock, categories, page, limit).pipe(
+      tap(products => {
+        console.log('Loaded products:', products);
+        this.productsSubject.next(products);
+      })
+    );
+  }
 
   getAllProducts(
     name: string | null = null,
@@ -60,15 +111,57 @@ export class ProductService {
   }
 
   addProduct(productData: Product | FormData) {
-    return this._httpClient.post(`${this.apiUrl}`, productData);
+    return this._httpClient.post(`${this.apiUrl}`, productData).pipe(
+      tap(() => {
+        const filterState = this.filterStateSubject.value;
+        this.loadProducts(
+          filterState.name,
+          filterState.minPrice,
+          filterState.maxPrice,
+          filterState.inStock,
+          filterState.categories,
+          filterState.page,
+          filterState.limit
+        ).subscribe();
+      })
+    );
   }
 
   updateProduct(id: string, productData: Product | FormData) {
-    return this._httpClient.put(`${this.apiUrl}/${id}`, productData);
+    return this._httpClient.put(`${this.apiUrl}/${id}`, productData).pipe(
+      tap(() => {
+        const filterState = this.filterStateSubject.value;
+        this.loadProducts(
+          filterState.name,
+          filterState.minPrice,
+          filterState.maxPrice,
+          filterState.inStock,
+          filterState.categories,
+          filterState.page,
+          filterState.limit
+        ).subscribe();
+      })
+    );
   }
 
+  deleteProduct(id: string) {
+    return this._httpClient.delete(`${this.apiUrl}/${id}`).pipe(
+      tap(() => {
+        const filterState = this.filterStateSubject.value;
+        this.loadProducts(
+          filterState.name,
+          filterState.minPrice,
+          filterState.maxPrice,
+          filterState.inStock,
+          filterState.categories,
+          filterState.page,
+          filterState.limit
+        ).subscribe();
+      })
+    );
+  }
 
-  deleteProduct(id: string){
-    return this._httpClient.delete(`${this.apiUrl}/${id}`);
+  getFilterState() {
+    return this.filterStateSubject.asObservable();
   }
 }

@@ -14,7 +14,7 @@ import { AuthService } from '../../services/auth-service';
   styleUrl: './addresses.css',
 })
 export class Addresses implements OnInit {
-  addressList$!: Observable<Address[]>;
+  addressList$: Observable<Address[]>;
   userId!: string;
 
   showModal: boolean = false;
@@ -30,6 +30,7 @@ export class Addresses implements OnInit {
     private _authService: AuthService,
     private fb: FormBuilder
   ) {
+    this.addressList$ = this._addressService.addresses$;
     this._authService.currentUserId$.subscribe(id => {
       this.userId = id!;
     });
@@ -47,7 +48,7 @@ export class Addresses implements OnInit {
   }
 
   loadAddresses() {
-    this.addressList$ = this._addressService.getCurrentUserAddresses();
+    this._addressService.loadAddresses().subscribe();
   }
 
   openAddModal() {
@@ -100,7 +101,6 @@ export class Addresses implements OnInit {
             this.successMessage = 'Address updated successfully!';
             setTimeout(() => {
               this.closeModal();
-              this.loadAddresses();
             }, 1500);
           },
           error: () => {
@@ -113,7 +113,6 @@ export class Addresses implements OnInit {
           this.successMessage = 'Address added successfully!';
           setTimeout(() => {
             this.closeModal();
-            this.loadAddresses();
           }, 1500);
         },
         error: () => {
@@ -128,7 +127,6 @@ export class Addresses implements OnInit {
       next: () => {
         this.successMessage = 'Default address updated!';
         setTimeout(() => this.clearMessages(), 2000);
-        this.loadAddresses();
       },
       error: () => {
         this.errorMessage = 'Failed to set default address.';
@@ -145,9 +143,6 @@ export class Addresses implements OnInit {
     this._addressService.deleteAddress(addressId).subscribe({
       next: () => {
         this.successMessage = 'Address deleted successfully!';
-        setTimeout(() => {
-          this.loadAddresses();
-        }, 1500);
       },
       error: (err) => {
         this.errorMessage = 'Failed to delete address. Please try again.';
