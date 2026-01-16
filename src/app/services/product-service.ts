@@ -59,12 +59,12 @@ export class ProductService {
     );
   }
 
-  addProduct(formData: FormData) {
-    return this._httpClient.post(`${this.apiUrl}`, formData);
+  addProduct(productData: Product | FormData) {
+    return this._httpClient.post(`${this.apiUrl}`, productData);
   }
 
-  updateProduct(id: string, formData: FormData) {
-    return this._httpClient.put(`${this.apiUrl}/${id}`, formData);
+  updateProduct(id: string, productData: Product | FormData) {
+    return this._httpClient.put(`${this.apiUrl}/${id}`, productData);
   }
 
 

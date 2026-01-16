@@ -75,7 +75,7 @@ export class ManageProduct implements OnInit {
 
     this.selectedImageFile = file;
 
-    // preview only
+    // Convert to base64 for preview and storage
     const reader = new FileReader();
     reader.onload = () => {
       this.imagePreviewUrl = reader.result;
@@ -119,58 +119,67 @@ export class ManageProduct implements OnInit {
     this.currentEditingProduct = null;
   }
 
-  private buildFormData(): FormData {
-    const formData = new FormData();
+  private buildFormData(): Promise<FormData> {
+    return new Promise((resolve) => {
+      const formData = new FormData();
 
-    formData.append('name', this.productForm.value.name);
-    formData.append('description', this.productForm.value.description);
-    formData.append('price', this.productForm.value.price.toString());
-    formData.append('quantity', this.productForm.value.quantity.toString());
-    formData.append('category', this.productForm.value.category);
+      formData.append('name', this.productForm.value.name);
+      formData.append('description', this.productForm.value.description);
+      formData.append('price', this.productForm.value.price.toString());
+      formData.append('quantity', this.productForm.value.quantity.toString());
+      formData.append('category', this.productForm.value.category);
 
-    if (this.selectedImageFile) {
-      formData.append('productImage', this.selectedImageFile); // must match multer field
-    }
-
-    return formData;
+      if (this.selectedImageFile) {
+        // Convert file to base64
+        const reader = new FileReader();
+        reader.onload = () => {
+          const base64String = reader.result as string;
+          formData.append('productImage', base64String);
+          resolve(formData);
+        };
+        reader.readAsDataURL(this.selectedImageFile);
+      } else {
+        resolve(formData);
+      }
+    });
   }
 
 
   saveProduct() {
     if (this.productForm.invalid) return;
 
-    const formData = this.buildFormData();
+    this.buildFormData().then((formData) => {
+      if (this.isEditMode && this.currentEditingProduct) {
+        this._productService
+          .updateProduct(this.currentEditingProduct.id!, formData)
+          .subscribe({
+            next: () => {
+              this.successMessage = 'Product updated successfully!';
+              setTimeout(() => {
+                this.closeModal();
+                this.loadProducts();
+              }, 1500);
+            },
+            error: () => {
+              this.errorMessage = 'Failed to update product.';
+            }
+          });
 
-    if (this.isEditMode && this.currentEditingProduct) {
-      this._productService
-        .updateProduct(this.currentEditingProduct.id!, formData)
-        .subscribe({
+      } else {
+        this._productService.addProduct(formData).subscribe({
           next: () => {
-            this.successMessage = 'Product updated successfully!';
+            this.successMessage = 'Product added successfully!';
             setTimeout(() => {
               this.closeModal();
               this.loadProducts();
             }, 1500);
           },
           error: () => {
-            this.errorMessage = 'Failed to update product.';
+            this.errorMessage = 'Failed to add product.';
           }
         });
-
-    } else {
-      this._productService.addProduct(formData).subscribe({
-        next: () => {
-          this.successMessage = 'Product added successfully!';
-          setTimeout(() => {
-            this.closeModal();
-            this.loadProducts();
-          }, 1500);
-        },
-        error: () => {
-          this.errorMessage = 'Failed to add product.';
-        }
-      });
-    }
+      }
+    });
   }
 
 
