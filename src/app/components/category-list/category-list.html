@@ -1,0 +1,36 @@
+<div class="category-container">
+  <!-- Header Section -->
+  <div class="category-header">
+    <div class="header-content">
+      <h1><i class="bi bi-diagram-3"></i> Categories</h1>
+      <p class="subtitle">Browse our wide range of product categories</p>
+    </div>
+  </div>
+
+  <!-- Categories Grid -->
+  <section class="categories-section">
+    <div class="categories-grid">
+      @for(category of categories$ | async; track category._id || $index){
+            <div class="category-card" [routerLink]="['/products']" [queryParams]="{ category: category._id }">
+              <div class="category-icon">
+                <i [ngClass]="getCategoryIcon(category.name)"></i>
+              </div>
+              <div class="category-content">
+                <h3 class="category-name">{{ category.name }}</h3>
+                <p class="category-description">{{ category.description }}</p>
+              </div>
+              <div class="category-footer">
+                <a [routerLink]="['/products']" [queryParams]="{ categories: category._id }" class="view-products">
+                  View Products <i class="bi bi-arrow-right"></i>
+                </a>
+              </div>
+            </div>
+          }@empty{
+          <div class="no-categories">
+            <i class="bi bi-inbox"></i>
+            <p>No categories found</p>
+          </div>
+        }
+    </div>
+  </section>
+</div>

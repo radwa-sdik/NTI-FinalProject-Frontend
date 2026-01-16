@@ -1,0 +1,46 @@
+/* Auth Page Styles */
+.auth-container {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 2rem;
+}
+
+.auth-form {
+    background-color: white;
+    padding: 3rem;
+    border-radius: 8px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    width: 100%;
+    max-width: 500px;
+}
+
+.auth-form h1 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 2rem;
+}
+
+.auth-form form {
+    margin-bottom: 1.5rem;
+}
+
+.auth-form button {
+    width: 100%;
+}
+
+.auth-form p {
+    text-align: center;
+    color: #6c757d;
+}
+
+.auth-form a {
+    color: #007bff;
+    text-decoration: none;
+}
+
+.auth-form a:hover {
+    text-decoration: underline;
+}

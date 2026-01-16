@@ -1,0 +1,184 @@
+<div class="orders-container">
+    <!-- Header -->
+    <div class="page-header">
+        <div class="header-content">
+            <h1><i class="bi bi-bag-check"></i> My Orders</h1>
+            <p class="subtitle">Track and manage your orders</p>
+        </div>
+    </div>
+
+    <!-- Orders List -->
+    @if(currentUserOrders$ | async; as orders){
+    <div class="orders-section">
+        @if(orders.length > 0){
+        <div class="orders-list">
+            @for(order of orders; track order._id){
+            <div class="order-card" [class]="'status-' + (order.status | lowercase)"
+                (click)="openOrderModal(order._id!)">
+                <!-- Order Header -->
+                <div class="order-header">
+                    <div class="order-info">
+                        <h3>Order #{{ order._id?.slice(-8)?.toUpperCase() }}</h3>
+                        <p class="order-date">
+                            <i class="bi bi-calendar"></i>
+                            {{ order.createdAt | date: 'MMM dd, yyyy' }}
+                        </p>
+                    </div>
+
+                    <div class="order-status">
+                        <span class="status-badge" [ngClass]="'status-' + (order.status | lowercase)">
+                            <i [ngClass]="getStatusIcon(order.status)"></i>
+                            {{ order.status }}
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Order Summary -->
+                <div class="order-summary">
+                    <div class="summary-item">
+                        <span class="label">Items:</span>
+                        <span class="value">{{ order.products.length || 0 }}</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="label">Subtotal:</span>
+                        <span class="value">${{ order.subTotal.toFixed(2) || '0.00' }}</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="label">Shipping:</span>
+                        <span class="value">${{ order.shipping.toFixed(2) || '0.00' }}</span>
+                    </div>
+                    <div class="summary-item total">
+                        <span class="label">Total:</span>
+                        <span class="value">{{ order.totalPrice | currency }}</span>
+                    </div>
+                </div>
+
+                <!-- Order Timeline/Status Indicator -->
+                <div class="order-timeline">
+                    <div class="timeline-item" [class.active]="isStatusActive(order.status, 'Pending')">
+                        <div class="timeline-dot"></div>
+                        <span>Pending</span>
+                    </div>
+                    <div class="timeline-item" [class.active]="isStatusActive(order.status, 'Processing')">
+                        <div class="timeline-dot"></div>
+                        <span>Processing</span>
+                    </div>
+                    <div class="timeline-item" [class.active]="isStatusActive(order.status, 'Shipped')">
+                        <div class="timeline-dot"></div>
+                        <span>Shipped</span>
+                    </div>
+                    <div class="timeline-item" [class.active]="isStatusActive(order.status, 'Delivered')">
+                        <div class="timeline-dot"></div>
+                        <span>Delivered</span>
+                    </div>
+                </div>
+
+                <!-- Click Indicator -->
+                <div class="click-indicator">
+                    <i class="bi bi-arrow-right"></i> Click to view details
+                </div>
+            </div>
+
+            }
+        </div>
+        }@else{
+        <div class="no-orders">
+            <i class="bi bi-inbox"></i>
+            <h2>No Orders Yet</h2>
+            <p>You haven't placed any orders</p>
+            <button class="btn-shop" routerLink="/products">
+                <i class="bi bi-shop"></i> Start Shopping
+            </button>
+        </div>
+        }
+    </div>
+    }
+</div>
+
+<!-- Order Details Modal -->
+@if(selectedOrder){
+<div class="modal-backdrop" (click)="closeOrderModal()"></div>
+<div class="modal-container">
+    <div class="modal-content">
+        <!-- Modal Header -->
+        <div class="modal-header">
+            <h2>Order Details - #{{ selectedOrder._id?.slice(-8)?.toUpperCase() }}</h2>
+            <button class="btn-close" (click)="closeOrderModal()" type="button">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+
+        <!-- Modal Body -->
+        <div class="modal-body">
+            <!-- Products List -->
+            <div class="details-section">
+                <h4><i class="bi bi-box"></i> Items Ordered</h4>
+                <div class="products-list">
+                    @for(product of selectedOrder.products; track product._id){
+                    <div class="product-item">
+                        <div class="product-info">
+                            <span class="product-name">{{ product.productId.name}}</span>
+                            <span class="product-qty">Quantity: {{ product.quantity }}</span>
+                        </div>
+                        <div class="product-price">
+                            <span>${{ product.price.toFixed(2) || '0.00' }} each</span>
+                            <span class="product-total">${{ (product.price * product.quantity).toFixed(2) }}</span>
+                        </div>
+                    </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Order Summary Details -->
+            <div class="details-section">
+                <h4><i class="bi bi-receipt"></i> Order Summary</h4>
+                <div class="summary-details">
+                    <div class="summary-row">
+                        <span class="label">Subtotal:</span>
+                        <span class="value">${{ selectedOrder.subTotal.toFixed(2) || '0.00' }}</span>
+                    </div>
+                    <div class="summary-row">
+                        <span class="label">Tax (10%):</span>
+                        <span class="value">${{ selectedOrder.tax.toFixed(2) || '0.00' }}</span>
+                    </div>
+                    <div class="summary-row">
+                        <span class="label">Shipping:</span>
+                        <span class="value">${{ selectedOrder.shipping.toFixed(2) || '0.00' }}</span>
+                    </div>
+                    <div class="summary-row total">
+                        <span class="label">Total Amount:</span>
+                        <span class="value">{{ selectedOrder.totalPrice | currency }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tracking Info -->
+            <div class="details-section">
+                <h4><i class="bi bi-truck"></i> Tracking Information</h4>
+                <div class="tracking-info">
+                    <p class="info-item">
+                        <span class="label">Order Status:</span>
+                        <span class="status-text" [ngClass]="'status-' + (selectedOrder.status | lowercase)">
+                            {{ selectedOrder.status }}
+                        </span>
+                    </p>
+                    <p class="info-item">
+                        <span class="label">Last Updated:</span>
+                        <span>{{ selectedOrder.updatedAt | date: 'MMM dd, yyyy - hh:mm a' }}</span>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="modal-footer">
+            <button class="btn-reorder" [disabled]="selectedOrder.status === 'Cancelled'">
+                <i class="bi bi-arrow-repeat"></i> Reorder
+            </button>
+            <button class="btn-close-modal" (click)="closeOrderModal()">
+                <i class="bi bi-x"></i> Close
+            </button>
+        </div>
+    </div>
+</div>
+}

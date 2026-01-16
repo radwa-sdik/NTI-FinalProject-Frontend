@@ -1,0 +1,86 @@
+<p><div class="chat-list-container">
+  <!-- Conversations List Sidebar -->
+  <div class="conversations-sidebar">
+    <div class="sidebar-header">
+      <h2>Conversations</h2>
+      <button class="btn-refresh" (click)="refreshConversations()" [disabled]="isLoading" title="Refresh">
+        <i class="bi bi-arrow-clockwise"></i>
+      </button>
+    </div>
+
+    <!-- Search and Filter -->
+    <div class="search-filter">
+        @if(currentUserRole === 'admin' || currentUserRole === 'support') {
+        <input 
+            type="text" 
+            placeholder="Search by ID or customer..."
+            [(ngModel)]="searchText"
+            class="search-input"
+        />
+        }
+      <select [(ngModel)]="filterStatus" class="filter-select">
+        <option value="all">All Status</option>
+        <option value="active">Active</option>
+        <option value="closed">Closed</option>
+        <option value="waiting">Waiting</option>
+      </select>
+    </div>
+
+    <!-- Conversations List -->
+    <div class="conversations-list">
+      @if (isLoading) {
+        <div class="loading-state">
+          <div class="spinner"></div>
+          <p>Loading conversations...</p>
+        </div>
+      } @else if (getFilteredConversations().length === 0) {
+        <div class="empty-state">
+          <i class="bi bi-chat-dots"></i>
+          <p>No conversations found</p>
+        </div>
+      } @else {
+        @for (conversation of getFilteredConversations(); track conversation._id) {
+          <div 
+            class="conversation-item"
+            [class.active]="selectedConversationId === conversation._id"
+            (click)="selectConversation(conversation)"
+          >
+            <div class="conversation-header">
+              <div class="conversation-info">
+                @if(currentUserRole === 'Admin' || currentUserRole === 'Support') {
+                    <p class="customer-id">{{ conversation.participants[0].firstName + ' ' + conversation.participants[0].lastName }}</p>
+                }@else if(conversation.participants.length > 1){
+                    <p class="customer-id">{{ conversation.participants[1].firstName + ' ' + conversation.participants[1].lastName }}</p>
+                }@else{
+                    <p class="customer-id">Support Team</p>
+                }
+                <span class="status-badge" [class]="getStatusColor(conversation.status)">
+                  {{ conversation.status }}
+                </span>
+              </div>
+              <!-- <p class="conversation-date">
+                {{ conversation.createdAt | date: 'short' }}
+              </p> -->
+            </div>
+            <div class="conversation-preview">
+              <p class="conv-id">{{ conversation.createdAt | date: 'short' }}</p>
+            </div>
+          </div>
+        }
+      }
+    </div>
+  </div>
+
+  <!-- Chat Area -->
+  <div class="chat-area">
+    @if (selectedConversationId) {
+      <app-chat [currentChatId]="selectedConversationId" [chatStatus]="selectedConversation?.status || 'active'"></app-chat>
+    } @else {
+      <div class="no-selection">
+        <i class="bi bi-chat-left-dots"></i>
+        <h3>Select a conversation to start</h3>
+        <p>Choose a conversation from the list to view and manage chat</p>
+      </div>
+    }
+  </div>
+</div>

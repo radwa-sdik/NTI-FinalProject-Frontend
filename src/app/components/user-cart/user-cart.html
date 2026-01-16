@@ -1,0 +1,160 @@
+<!-- NOT LOGGED IN -->
+<div *ngIf="!(isLoggedIn$ | async); else cartPage" class="access-denied">
+  <i class="bi bi-lock"></i>
+  <h2>Please Log In</h2>
+  <p>You need to be logged in to view your cart</p>
+  <a routerLink="/login" class="btn-login">Go to Login</a>
+</div>
+
+<!-- LOGGED IN -->
+<ng-template #cartPage>
+  <div class="cart-container">
+
+    <!-- Header -->
+    <div class="page-header">
+      <div class="header-content">
+        <h1><i class="bi bi-cart3"></i> Shopping Cart</h1>
+        <p class="subtitle">Review and manage your items</p>
+      </div>
+    </div>
+
+    <!-- Messages -->
+    <div *ngIf="successMessage" class="alert alert-success">
+      <i class="bi bi-check-circle"></i> {{ successMessage }}
+    </div>
+
+    <div *ngIf="errorMessage" class="alert alert-error">
+      <i class="bi bi-exclamation-circle"></i> {{ errorMessage }}
+    </div>
+
+    <!-- Cart Content -->
+    <div class="cart-content" *ngIf="(userCart$ | async) as cart">
+
+      <!-- CART WITH ITEMS -->
+      <div
+        class="cart-items-section"
+        *ngIf="cart.items.length > 0; else emptyCart"
+      >
+        <table class="cart-table">
+          <thead>
+            <tr>
+              <th>Product</th>
+              <th>Price</th>
+              <th>Quantity</th>
+              <th>Total</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr
+              class="cart-item-row"
+              *ngFor="let item of cart.items"
+            >
+              <td class="product-info">
+                <div class="product-details">
+                  <i class="bi bi-box"></i>
+                  <span class="product-name">
+                    {{ item.productId.name }}
+                  </span>
+                </div>
+              </td>
+
+              <td class="price-cell">
+                {{ item.priceBerUnit | currency }}
+              </td>
+
+              <td class="quantity-cell">
+                <div class="quantity-control">
+                  <button
+                    class="qty-btn"
+                    (click)="decreaseQuantity(item.productId.id!, item.quantity)"
+                    [disabled]="item.quantity <= 1"
+                  >
+                    <i class="bi bi-dash"></i>
+                  </button>
+
+                  <span class="qty-value">{{ item.quantity }}</span>
+
+                  <button
+                    class="qty-btn"
+                    (click)="increaseQuantity(item.productId.id!, item.quantity)"
+                  >
+                    <i class="bi bi-plus"></i>
+                  </button>
+                </div>
+              </td>
+
+              <td class="total-cell">
+                {{ item.priceBerUnit * item.quantity | currency }}
+              </td>
+
+              <td class="actions-cell">
+                <button
+                  class="btn-remove"
+                  (click)="removeItem(item.productId.id!)"
+                >
+                  <i class="bi bi-trash"></i>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- EMPTY CART -->
+      <ng-template #emptyCart>
+        <div class="empty-cart">
+          <i class="bi bi-cart-x"></i>
+          <h2>Your Cart is Empty</h2>
+          <p>Looks like you haven't added any items yet</p>
+          <button routerLink="/products" class="btn-shop">
+            <i class="bi bi-shop"></i> Start Shopping
+          </button>
+        </div>
+      </ng-template>
+
+      <!-- Cart Summary -->
+      <div class="cart-summary-section" *ngIf="cart.items.length > 0">
+        <div class="summary-card">
+          <h3>Order Summary</h3>
+
+          <div class="summary-row">
+            <span class="label">Subtotal:</span>
+            <span class="value">
+              {{ calculateSubtotal(cart.items) | currency }}
+            </span>
+          </div>
+
+          <div class="summary-row">
+            <span class="label">Shipping:</span>
+            <span class="value shipping-fee" >{{ calculateSubtotal(cart.items) >= 50 ? '$0.00' : '$10.00' }}</span>
+          </div>
+
+          <div class="summary-row">
+            <span class="label">Tax (10%):</span>
+            <span class="value">
+              {{ calculateTax(cart.items) | currency }}
+            </span>
+          </div>
+
+          <div class="summary-row total">
+            <span class="label">Total:</span>
+            <span class="value">
+              {{ calculateTotal(cart.items) | currency }}
+            </span>
+          </div>
+
+          <button class="btn-checkout" routerLink="/checkout">
+            <i class="bi bi-credit-card"></i> Proceed to Checkout
+          </button>
+
+          <button class="btn-continue-shopping" routerLink="/products">
+            <i class="bi bi-arrow-left"></i> Continue Shopping
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</ng-template>

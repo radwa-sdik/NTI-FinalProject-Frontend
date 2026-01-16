@@ -1,0 +1,52 @@
+<nav class="navbar">
+    <div class="nav-container">
+        <a routerLink="/" class="logo"><i class="bi bi-bag-check"></i> ShopHub</a>
+        <div class="hamburger" id="hamburger">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+        <ul class="nav-menu" id="navMenu">
+            <li><a routerLink="/" class="nav-link"><i class="bi bi-house-door"></i> Home</a></li>
+            <li><a routerLink="/products" class="nav-link"><i class="bi bi-shop"></i> Products</a></li>
+            <li><a routerLink="/categories" class="nav-link"><i class="bi bi-tag"></i> Categories</a></li>
+            <!--@if(isLoggedIn$ | async)-->
+            @if(isLoggedIn$ | async){
+                @if((userRole$ | async) == 'User'){
+                <li id="userLinks" class="nav-section dropdown-section">
+                    <a routerLink="/cart" class="nav-link"><i class="bi bi-cart3"></i> Cart</a>
+                    <div class="dropdown" [class.active]="dropdownOpen">
+                        <a class="dropdown-toggle nav-link" (click)="toggleDropdown()" role="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi bi-person-circle"></i> Account <i class="bi bi-chevron-down"></i></a>
+                        <ul class="dropdown-menu">
+                            <li><a routerLink="/orders" class="dropdown-item" (click)="closeDropdown()"><i class="bi bi-box-seam"></i> Orders</a></li>
+                            <li><a routerLink="/addresses" class="dropdown-item" (click)="closeDropdown()"><i class="bi bi-geo-alt"></i> Addresses</a></li>
+                            <li><a routerLink="/chats" class="dropdown-item" (click)="closeDropdown()"><i class="bi bi-chat-dots"></i> Messages</a></li>
+                        </ul>
+                    </div>
+                </li>
+                }@else if((userRole$ | async) == 'Admin'){
+                <li id="adminLinks" class="nav-section">
+                    <div class="dropdown" [class.active]="dropdownOpen">
+                        <a class="dropdown-toggle nav-link" (click)="toggleDropdown()" role="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi bi-person-circle"></i> Management <i class="bi bi-chevron-down"></i></a>
+                        <ul class="dropdown-menu">
+                            <li><a routerLink="/manage-products" class="dropdown-item" (click)="closeDropdown()"><i class="bi bi-box-seam"></i> Products</a></li>
+                            <li><a routerLink="/manage-categories" class="dropdown-item" (click)="closeDropdown()"><i class="bi bi-geo-alt"></i> Categories</a></li>
+                            <li><a routerLink="/manage-orders" class="dropdown-item" (click)="closeDropdown()"><i class="bi bi-geo-alt"></i> Orders</a></li>
+                            <li><a routerLink="/chats" class="dropdown-item" (click)="closeDropdown()"><i class="bi bi-chat-dots"></i> Messages</a></li>
+                        </ul>
+                    </div>
+                </li>
+                }
+                <li id="logoutContainer" class="nav-section">
+                    <button id="logoutBtn" class="nav-link logout-btn" (click)="logout()"><i class="bi bi-box-arrow-right"></i> Logout</button>
+                </li>
+            }@else {
+            <li id="authLinks" class="nav-section">
+                <a routerLink="/cart" class="nav-link"><i class="bi bi-cart3"></i> Cart</a>
+                <a routerLink="/auth/login" class="nav-link"><i class="bi bi-box-arrow-in-right"></i> Login</a>
+                <a routerLink="/auth/register" class="nav-link register-btn"><i class="bi bi-person-plus"></i> Register</a>
+            </li>
+            }
+        </ul>
+    </div>
+</nav>

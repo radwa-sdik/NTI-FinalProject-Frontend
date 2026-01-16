@@ -1,0 +1,137 @@
+@if((userRole$ | async) == 'Admin'){
+<div class="manage-categories-container">
+    <!-- Header -->
+    <div class="page-header">
+        <div class="header-content">
+            <h1><i class="bi bi-tag"></i> Manage Categories</h1>
+            <p class="subtitle">Add, edit, and manage product categories</p>
+        </div>
+        <button class="btn-add-category" (click)="openAddModal()">
+            <i class="bi bi-plus-circle"></i> Add New Category
+        </button>
+    </div>
+
+    <!-- Filters -->
+    <div class="filters-bar">
+        <div class="search-box">
+            <i class="bi bi-search"></i>
+            <input type="text" placeholder="Search categories..." [(ngModel)]="searchTerm"
+                (ngModelChange)="applyFilters(searchTerm)" />
+        </div>
+    </div>
+
+    <!-- Messages -->
+    @if(successMessage){
+    <div class="alert alert-success">
+        <i class="bi bi-check-circle"></i> {{ successMessage }}
+    </div>
+    }
+    @if(errorMessage){
+    <div class="alert alert-error">
+        <i class="bi bi-exclamation-circle"></i> {{ errorMessage }}
+    </div>
+    }
+
+    <!-- Categories Table -->
+    <div class="categories-section" *ngIf="filteredCategories$ | async as categories">
+        @if(categories.length > 0){
+        <table class="categories-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Description</th>
+                    <th>Parent Category</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @for(category of categories; track category._id || $index){
+                <tr class="category-row">
+                    <td class="name-cell">
+                        <div class="category-name-badge">
+                            <i class="bi bi-tag"></i> {{ category.name }}
+                        </div>
+                    </td>
+                    <td class="description-cell">{{ category.description || 'N/A' }}</td>
+                    <td class="parent-cell">{{ category.parentCategory?.name || 'None' }}</td>
+                    <td class="actions-cell">
+                        <button class="btn-edit" (click)="openEditModal(category)" title="Edit">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <button class="btn-delete" (click)="deleteCategory(category._id!)" title="Delete">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+                }
+            </tbody>
+        </table>
+        }@else{
+        <div class="no-categories">
+            <i class="bi bi-inbox"></i>
+            <p>No categories found</p>
+        </div>
+        }
+    </div>
+
+    <!-- Add/Edit Modal -->
+    @if(showModal){
+    <div class="modal-overlay" (click)="closeModal()">
+        <div class="modal-content" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+                <h2>{{ isEditMode ? 'Edit Category' : 'Add New Category' }}</h2>
+                <button class="btn-close" (click)="closeModal()">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+
+            <form [formGroup]="categoryForm" (ngSubmit)="saveCategory()" class="category-form">
+                <!-- Name -->
+                <div class="form-group">
+                    <label>Category Name *</label>
+                    <input type="text" formControlName="name" placeholder="Enter category name">
+                    @if(isFieldInvalid('name')){
+                    <span class="error">Category name is required</span>
+                    }
+                </div>
+
+                <!-- Description -->
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea formControlName="description" placeholder="Enter category description" rows="4"></textarea>
+                </div>
+
+                <!-- Parent Category -->
+                <div class="form-group">
+                    <label>Parent Category</label>
+                    <select formControlName="parentCategory">
+                        <option value="">None (Root Category)</option>
+                        @for(cat of categories$ | async; track cat._id){
+                        @if(cat._id !== currentEditingCategory?._id){
+                        <option [value]="cat._id">{{ cat.name }}</option>
+                        }
+                        }
+                    </select>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="form-actions">
+                    <button type="submit" class="btn-submit" [disabled]="!categoryForm.valid">
+                        <i class="bi bi-check-circle"></i> {{ isEditMode ? 'Update Category' : 'Add Category' }}
+                    </button>
+                    <button type="button" class="btn-cancel" (click)="closeModal()">
+                        <i class="bi bi-x-circle"></i> Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    }
+</div>
+}@else{
+<div class="access-denied">
+    <i class="bi bi-shield-lock"></i>
+    <h2>Access Denied</h2>
+    <p>You do not have permission to access this page.</p>
+</div>
+}

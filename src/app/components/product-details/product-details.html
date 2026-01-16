@@ -1,0 +1,204 @@
+<div class="product-details-container" *ngIf="product$ | async as product">
+
+    <!-- Breadcrumb -->
+    <div class="breadcrumb">
+        <a routerLink="/" class="breadcrumb-link">Home</a>
+        <i class="bi bi-chevron-right"></i>
+        <a routerLink="/products" class="breadcrumb-link">Products</a>
+        <i class="bi bi-chevron-right"></i>
+        <span class="current">{{ product.name }}</span>
+    </div>
+
+    <div class="product-details-content">
+        <!-- Image Section -->
+        <div class="product-image-section">
+            <div class="main-image-container">
+                <img *ngIf="product.productImages?.length" [src]="imageBaseUrl + product.productImages[0].imageUrl"
+                    [alt]="product.name" class="product-img" style="width: 100%; height: auto;" />
+                <div *ngIf="!product.inStock" class="out-of-stock-overlay">Out of Stock</div>
+
+                <span *ngIf="product.quantity <= 5 && product.quantity > 0" class="stock-badge">
+                    Only {{ product.quantity }} left
+                </span>
+            </div>
+        </div>
+
+        <!-- Details Section -->
+        <div class="product-details-section">
+            <!-- Header -->
+            <div class="details-header">
+                <h1 class="product-title">{{ product.name }}</h1>
+                <span class="category-tag">{{ product.category.name }}</span>
+            </div>
+
+            <!-- Rating -->
+            <div class="rating-section">
+                <div class="stars">
+                    @for(i of [1,2,3,4,5]; track i){
+                    @if(i <= product.rating){ <i class="bi bi-star-fill"></i>
+                        }@else{
+                        <i class="bi bi-star"></i>
+                        }
+                        }
+                </div>
+                <span class="review-count">({{ product.reviewsCount }} reviews)</span>
+            </div>
+
+            <!-- Price -->
+            <div class="price-section">
+                <span class="price">${{ product.price }}</span>
+                <span class="availability" [class.in-stock]="product.inStock">
+                    {{ product.inStock ? '✓ In Stock' : '✗ Out of Stock' }}
+                </span>
+            </div>
+
+            <!-- Stock Info -->
+            <div class="stock-info">
+                <p><strong>Stock Available:</strong> {{ product.quantity > 0 ? product.quantity + ' units' : 'Not
+                    Available' }}</p>
+            </div>
+
+            <!-- Description -->
+            <div class="description-section">
+                <h3>Description</h3>
+                <p class="description-text">{{ product.description }}</p>
+            </div>
+
+            <!-- Quantity Selector -->
+            <div class="quantity-section">
+                <label>Quantity:</label>
+                <div class="quantity-selector">
+                    <button class="qty-btn" (click)="decreaseQuantity()" [disabled]="selectedQuantity <= 1">
+                        <i class="bi bi-dash-lg"></i>
+                    </button>
+                    <input type="number" class="qty-input" [(ngModel)]="selectedQuantity" [max]="product.quantity"
+                        min="1">
+                    <button class="qty-btn" (click)="increaseQuantity()"
+                        [disabled]="selectedQuantity >= product.quantity">
+                        <i class="bi bi-plus-lg"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                <button class="btn-add-cart" [disabled]="!product.inStock" (click)="addToCart()">
+                    <i class="bi bi-cart-plus"></i> Add to Cart
+                </button>
+                <button class="btn-wishlist" (click)="addToWishlist()">
+                    <i class="bi bi-heart"></i> Add to Wishlist
+                </button>
+            </div>
+
+            <!-- Share Section -->
+            <div class="share-section">
+                <h4>Share this product:</h4>
+                <div class="share-buttons">
+                    <button class="share-btn facebook" title="Share on Facebook">
+                        <i class="bi bi-facebook"></i>
+                    </button>
+                    <button class="share-btn twitter" title="Share on Twitter">
+                        <i class="bi bi-twitter"></i>
+                    </button>
+                    <button class="share-btn whatsapp" title="Share on WhatsApp">
+                        <i class="bi bi-whatsapp"></i>
+                    </button>
+                    <button class="share-btn copy" title="Copy link" (click)="copyLink()">
+                        <i class="bi bi-link-45deg"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Additional Info -->
+    <div class="additional-info">
+        <!-- Tabs -->
+        <div class="info-tabs">
+            <button class="tab-btn" [class.active]="activeTab === 'details'" (click)="activeTab = 'details'">
+                <i class="bi bi-info-circle"></i> Details
+            </button>
+            <button class="tab-btn" [class.active]="activeTab === 'reviews'" (click)="activeTab = 'reviews'">
+                <i class="bi bi-chat-left-dots"></i> Reviews
+            </button>
+            <button class="tab-btn" [class.active]="activeTab === 'shipping'" (click)="activeTab = 'shipping'">
+                <i class="bi bi-truck"></i> Shipping
+            </button>
+        </div>
+
+        <!-- Tab Content -->
+        <div class="tab-content">
+            @if(activeTab === 'details'){
+            <div class="tab-pane">
+                <h4>Product Details</h4>
+                <ul class="details-list">
+                    <li><strong>Product ID:</strong> {{ product.id }}</li>
+                    <li><strong>Category:</strong> {{ product.category.name }}</li>
+                    <li><strong>Price:</strong> ${{ product.price }}</li>
+                    <li><strong>In Stock:</strong> {{ product.inStock ? 'Yes' : 'No' }}</li>
+                    <li><strong>Rating:</strong> {{ product.rating }}/5 ({{ product.reviewsCount }} reviews)</li>
+                </ul>
+            </div>
+            }@else if(activeTab === 'reviews'){
+            <div class="tab-pane">
+                <h4>Customer Reviews</h4>
+                <div class="reviews-container">
+                    @for(review of product.reviews; track review._id || $index){
+                    <div class="review-card">
+                        <div class="review-header">
+                            <span class="review-user">{{ review.userId.firstName }} {{ review.userId.lastName }}</span>
+                            <div class="review-rating">
+                                @for(i of [1,2,3,4,5]; track i){
+                                @if(i <= review.rating){ <i class="bi bi-star-fill"></i>
+                                    }@else{
+                                    <i class="bi bi-star"></i>
+                                    }
+                                    }
+                            </div>
+                        </div>
+                        <p class="review-comment">{{ review.comment }}</p>
+                        <span class="review-date">{{ review.createdAt | date:'mediumDate' }}</span>
+                    </div>
+                    }@empty{
+                    <p class="no-reviews">No reviews yet. Be the first to review this product!</p>
+                    <button class="btn-write-review">Write a Review</button>
+                    }
+                </div>
+            </div>
+            }@else if(activeTab === 'shipping'){
+            <div class="tab-pane">
+                <h4>Shipping Information</h4>
+                <div class="shipping-info">
+                    <div class="shipping-item">
+                        <i class="bi bi-truck"></i>
+                        <div>
+                            <h5>Free Shipping</h5>
+                            <p>On orders over $50</p>
+                        </div>
+                    </div>
+                    <div class="shipping-item">
+                        <i class="bi bi-arrow-counterclockwise"></i>
+                        <div>
+                            <h5>Easy Returns</h5>
+                            <p>30-day return policy</p>
+                        </div>
+                    </div>
+                    <div class="shipping-item">
+                        <i class="bi bi-shield-check"></i>
+                        <div>
+                            <h5>Secure Checkout</h5>
+                            <p>100% secure transactions</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            }
+        </div>
+    </div>
+
+    <!-- Related Products -->
+    <div class="related-products">
+        <h3>Related Products</h3>
+        <p class="coming-soon">More related products coming soon...</p>
+    </div>
+</div>

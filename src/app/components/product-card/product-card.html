@@ -1,0 +1,56 @@
+@if(product != null){
+<div class="product-card">
+    <!-- Image Container -->
+    <div class="product-image-container">
+        <img *ngIf="product.productImages?.length"
+                            [src]="imageBaseUrl + product.productImages[0].imageUrl" [alt]="product.name"
+                            class="product-img" style="width: 100%; height: auto;"/>
+        <div class="product-overlay">
+            <button class="btn-add-cart" title="Add to Cart" (click)="addToCart(product)">
+                <i class="bi bi-cart-plus"></i>
+            </button>
+            <button class="btn-wishlist" title="Add to Wishlist">
+                <i class="bi bi-heart"></i>
+            </button>
+        </div>
+        @if(product.quantity <= 5 && product.quantity > 0){
+        <span class="badge badge-low-stock">Low Stock</span>
+        }@else if(!product.inStock){
+        <span class="badge badge-out-of-stock">Out of Stock</span>
+        }
+    </div>
+
+    <!-- Product Info -->
+    <div class="product-info">
+        <!-- Category -->
+        <span class="product-category">{{ product.category.name }}</span>
+
+        <!-- Name -->
+        <h3 class="product-name">{{ product.name }}</h3>
+
+        <!-- Rating -->
+        <div class="product-rating">
+            <div class="stars">
+                @for(i of [1,2,3,4,5]; track i){
+                @if(i <= product.rating){ <i class="bi bi-star-fill"></i>
+                    }@else{
+                    <i class="bi bi-star"></i>
+                    }
+                    }
+            </div>
+            <span class="rating-text">({{ product.reviewsCount }} reviews)</span>
+        </div>
+
+        <!-- Description -->
+        <p class="product-description">{{ product.description | slice:0:60 }}...</p>
+
+        <!-- Footer: Price and Button -->
+        <div class="product-footer">
+            <div class="price-section">
+                <span class="price">${{ product.price }}</span>
+            </div>
+            <button class="btn-view-details" [routerLink]="['/products', product.id]">View Details</button>
+        </div>
+    </div>
+</div>
+}

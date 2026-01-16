@@ -1,0 +1,97 @@
+<div class="products-container">
+    <!-- Sidebar Filters -->
+    <aside class="filters-sidebar">
+        <div class="filters-header">
+            <h3><i class="bi bi-funnel"></i> Filters</h3>
+            <button class="btn-clear-filters" (click)="clearFilters()" title="Clear all filters">
+                <i class="bi bi-x-circle"></i>
+            </button>
+        </div>
+
+        <!-- Product Name Filter -->
+        <div class="filter-group">
+            <label class="filter-label">Product Name</label>
+            <input type="text" class="filter-input" placeholder="Search products..." [(ngModel)]="productNameFilter"
+                (ngModelChange)="applyFilters()" />
+        </div>
+
+        <!-- Price Range Filter -->
+        <div class="filter-group">
+            <label class="filter-label">Price Range</label>
+            <div class="price-inputs">
+                <input type="number" class="price-input" placeholder="Min" [(ngModel)]="minPriceFilter"
+                    (ngModelChange)="applyFilters()" />
+                <span class="price-separator">-</span>
+                <input type="number" class="price-input" placeholder="Max" [(ngModel)]="maxPriceFilter"
+                    (ngModelChange)="applyFilters()" />
+            </div>
+        </div>
+
+        <!-- Stock Filter -->
+        <div class="filter-group">
+            <label class="filter-label">Stock Status</label>
+            <div class="stock-options">
+                <label class="checkbox-label">
+                    <input type="checkbox" [(ngModel)]="inStockFilter" (ngModelChange)="applyFilters()" />
+                    <span>In Stock Only</span>
+                </label>
+            </div>
+        </div>
+
+        <!-- Categories Filter -->
+        <div class="filter-group">
+            <label class="filter-label">Categories</label>
+            <div class="categories-list">
+                @for(category of categories$ | async; track category._id || $index){
+                <label class="checkbox-label">
+                    <input type="checkbox" [checked]="categoriesFilter.includes(category._id!)"
+                        (change)="toggleCategory(category._id!)" />
+                    <span>{{ category.name }}</span>
+                </label>
+                }
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="products-main">
+        <!-- Header -->
+        <div class="products-header">
+            <h2><i class="bi bi-shop"></i> Products</h2>
+            <div class="sort-section">
+                <label for="sortSelect">Sort by:</label>
+                <select id="sortSelect" class="sort-select" [(ngModel)]="sortBy" (ngModelChange)="applyFilters()">
+                    <option value="latest">Latest</option>
+                    <option value="price-low">Price: Low to High</option>
+                    <option value="price-high">Price: High to Low</option>
+                    <option value="rating">Highest Rated</option>
+                    <option value="name">Name A-Z</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Products Grid -->
+        <div class="products-grid">
+            @for(product of filteredProducts$ | async; track product.id || $index){
+            <app-product-card [product]="product"></app-product-card>
+            }@empty{
+            <div class="no-products">
+                <i class="bi bi-inbox"></i>
+                <p>No products found</p>
+                <button class="btn-reset" (click)="clearFilters()">Reset Filters</button>
+            </div>
+            }
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination">
+            <button class="btn-prev" (click)="previousPage()" [disabled]="pageNumber <= 1">
+                <i class="bi bi-chevron-left"></i> Previous
+            </button>
+            <span class="page-info">Page {{ pageNumber }}</span>
+            <button class="btn-next" (click)="nextPage()" [disabled]="!canLoadMore">
+                Next <i class="bi bi-chevron-right"></i>
+            </button>
+        </div>
+    </main>
+</div>

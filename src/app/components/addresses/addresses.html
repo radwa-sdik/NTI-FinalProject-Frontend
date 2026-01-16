@@ -1,0 +1,164 @@
+<div class="addresses-container">
+    <!-- Header -->
+    <div class="page-header">
+        <div class="header-content">
+            <h1><i class="bi bi-geo-alt"></i> My Addresses</h1>
+            <p class="subtitle">Manage your delivery addresses</p>
+        </div>
+        <button class="btn-add-address" (click)="openAddModal()">
+            <i class="bi bi-plus-circle"></i> Add New Address
+        </button>
+    </div>
+
+    <!-- Messages -->
+    @if(successMessage){
+    <div class="alert alert-success">
+        <i class="bi bi-check-circle"></i> {{ successMessage }}
+    </div>
+    }
+    @if(errorMessage){
+    <div class="alert alert-error">
+        <i class="bi bi-exclamation-circle"></i> {{ errorMessage }}
+    </div>
+    }
+
+    <!-- Addresses List -->
+     @if(addressList$ | async; as addresses){
+
+         <div class="addresses-section">
+             @if(addresses.length > 0){
+             <div class="addresses-grid">
+                 @for(address of addresses; track address._id){
+                 <div class="address-card" [class.default-address]="address.isDefault">
+                     @if(address.isDefault){
+                     <div class="default-badge">
+                         <i class="bi bi-star-fill"></i> Default Address
+                     </div>
+                     }
+                     
+                     <div class="address-content">
+                         <h3>
+                             <i class="bi bi-house-door"></i>
+                             {{ address.street }}
+                         </h3>
+                         
+                         <div class="address-details">
+                             <p class="detail-item">
+                                 <span class="label">City:</span>
+                                 <span class="value">{{ address.city }}</span>
+                             </p>
+                             <p class="detail-item">
+                                 <span class="label">Zip Code:</span>
+                                 <span class="value">{{ address.zipCode }}</span>
+                             </p>
+                             <p class="detail-item">
+                                 <span class="label">Country:</span>
+                                 <span class="value">{{ address.country }}</span>
+                             </p>
+                         </div>
+                         
+                         <div class="address-date">
+                             <i class="bi bi-calendar"></i>
+                             Added on {{ address.createdAt | date: 'MMM dd, yyyy' }}
+                         </div>
+                     </div>
+                     
+                     <div class="address-actions">
+                         @if(!address.isDefault){
+                         <button class="btn-set-default" (click)="setDefaultAddress(address._id!)" title="Set as default">
+                             <i class="bi bi-star"></i> Set Default
+                         </button>
+                         }
+                         
+                         <button class="btn-edit" (click)="openEditModal(address)" title="Edit">
+                             <i class="bi bi-pencil"></i> Edit
+                         </button>
+                         
+                         <button class="btn-delete" (click)="deleteAddress(address._id!)" title="Delete" [disabled]="address.isDefault">
+                             <i class="bi bi-trash"></i> Delete
+                         </button>
+                     </div>
+                 </div>
+                 }
+             </div>
+             }@else{
+             <div class="no-addresses">
+                 <i class="bi bi-pin-map"></i>
+                 <h2>No Addresses Yet</h2>
+                 <p>You haven't added any delivery addresses</p>
+                 <button class="btn-add-first" (click)="openAddModal()">
+                     <i class="bi bi-plus-circle"></i> Add Your First Address
+                 </button>
+             </div>
+             }
+         </div>
+     }
+
+    <!-- Add/Edit Modal -->
+    @if(showModal){
+    <div class="modal-overlay" (click)="closeModal()">
+        <div class="modal-content" (click)="$event.stopPropagation()">
+            <div class="modal-header">
+                <h2>{{ isEditMode ? 'Edit Address' : 'Add New Address' }}</h2>
+                <button class="btn-close" (click)="closeModal()">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+
+            <form [formGroup]="addressForm" (ngSubmit)="saveAddress()" class="address-form">
+                <!-- Street -->
+                <div class="form-group">
+                    <label>Street Address *</label>
+                    <input type="text" formControlName="street" placeholder="Enter your street address">
+                    @if(isFieldInvalid('street')){
+                    <span class="error">Street address is required</span>
+                    }
+                </div>
+
+                <!-- City and Zip Code Row -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>City *</label>
+                        <input type="text" formControlName="city" placeholder="Enter city name">
+                        @if(isFieldInvalid('city')){
+                        <span class="error">City is required</span>
+                        }
+                    </div>
+                    <div class="form-group">
+                        <label>Zip Code *</label>
+                        <input type="text" formControlName="zipCode" placeholder="Enter zip code">
+                        @if(isFieldInvalid('zipCode')){
+                        <span class="error">Zip code is required</span>
+                        }
+                    </div>
+                </div>
+
+                <!-- Country -->
+                <div class="form-group">
+                    <label>Country *</label>
+                    <input type="text" formControlName="country" placeholder="Enter country name">
+                    @if(isFieldInvalid('country')){
+                    <span class="error">Country is required</span>
+                    }
+                </div>
+
+                <!-- Set as Default Checkbox -->
+                <div class="form-group checkbox">
+                    <input type="checkbox" id="isDefault" formControlName="isDefault">
+                    <label for="isDefault">Set as default address</label>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="form-actions">
+                    <button type="submit" class="btn-submit" [disabled]="!addressForm.valid">
+                        <i class="bi bi-check-circle"></i> {{ isEditMode ? 'Update Address' : 'Add Address' }}
+                    </button>
+                    <button type="button" class="btn-cancel" (click)="closeModal()">
+                        <i class="bi bi-x-circle"></i> Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    }
+</div>

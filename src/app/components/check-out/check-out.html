@@ -1,0 +1,131 @@
+<div class="checkout-container">
+    <!-- Header -->
+    <div class="page-header">
+        <div class="header-content">
+            <h1><i class="bi bi-credit-card"></i> Checkout</h1>
+            <p class="subtitle">Complete your purchase</p>
+        </div>
+        <button routerLink="/cart" class="btn-back">
+            <i class="bi bi-arrow-left"></i> Back to Cart
+        </button>
+    </div>
+
+    <!-- Messages -->
+    @if(successMessage){
+    <div class="alert alert-success">
+        <i class="bi bi-check-circle"></i> {{ successMessage }}
+    </div>
+    }
+    @if(errorMessage){
+    <div class="alert alert-error">
+        <i class="bi bi-exclamation-circle"></i> {{ errorMessage }}
+    </div>
+    }
+
+    <!-- Loading State -->
+    @if(isLoading){
+    <div class="loading-state">
+        <div class="spinner"></div>
+        <p>Processing your order...</p>
+    </div>
+    }@else{
+    <div class="checkout-wrapper">
+        <!-- Checkout Form Section -->
+        <div class="checkout-form-section">
+            <!-- Address Selection -->
+            <div class="form-section">
+                <h2><i class="bi bi-geo-alt"></i> Shipping Address</h2>
+                <div class="addresses-container" *ngIf="addresses$ | async as addresses">
+
+                    @if(addresses.length > 0){
+                    <div class="addresses-grid">
+                        @for(address of addresses; track address._id){
+                        <div class="address-card" [class.selected]="selectedAddressId === address._id"
+                            (click)="selectAddress(address)">
+                            <div class="address-selector">
+                                <input type="radio" [name]="'address'" [value]="address._id"
+                                    [checked]="selectedAddressId === address._id" />
+                            </div>
+                            <div class="address-content">
+                                <p class="address-street">{{ address.street }}</p>
+                                <p class="address-city">{{ address.city }}, {{ address.zipCode }}</p>
+                                <p class="address-country">{{ address.country }}</p>
+                                @if(address.isDefault){
+                                <span class="badge badge-default">
+                                    <i class="bi bi-check-circle"></i> Default
+                                </span>
+                                }
+                            </div>
+                        </div>
+                        }
+                    </div>
+                    }@else{
+                    <div class="no-addresses">
+                        <i class="bi bi-inbox"></i>
+                        <p>No addresses found</p>
+                        <a routerLink="/addresses" class="btn-add-address">
+                            <i class="bi bi-plus-circle"></i> Add Address
+                        </a>
+                    </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Order Summary Sidebar -->
+        <div class="order-summary-section">
+            <div class="summary-card">
+                <h2><i class="bi bi-receipt"></i> Order Summary</h2>
+                <div class="summary-content">
+                    @if(cart$ | async; as cart){
+                    @if(cart.items && cart.items.length > 0){
+                    <div class="order-items">
+                        @for(item of cart.items; track $index;){
+                        <div class="order-item">
+                            <div class="item-info">
+                                <span class="item-name">{{item.productId.name}}</span>
+                                <span class="item-qty">Qty: {{ item.quantity }}</span>
+                            </div>
+                            <span class="item-price">${{ (item.priceBerUnit * item.quantity).toFixed(2) }}</span>
+                        </div>
+                        }
+                    </div>
+
+                    <div class="order-totals">
+                        <div class="total-row">
+                            <span>Subtotal:</span>
+                            <span>${{ calculateSubtotal(cart.items).toFixed(2) }}</span>
+                        </div>
+                        <div class="total-row">
+                            <span>Shipping:</span>
+                            <span>$10.00</span>
+                        </div>
+                        <div class="total-row">
+                            <span>Tax (10%):</span>
+                            <span>${{ calculateTax(cart.items).toFixed(2) }}</span>
+                        </div>
+                        <div class="total-row final">
+                            <span>Total:</span>
+                            <span>{{ calculateTotal(cart.items) | currency }}</span>
+                        </div>
+                    </div>
+
+
+                    }@else{
+                    <div class="empty-cart-message">
+                        <i class="bi bi-cart-x"></i>
+                        <p>Your cart is empty</p>
+                        <a routerLink="/products" class="btn-continue">Continue Shopping</a>
+                    </div>
+                    }
+                    }
+                    <div id="paypal-button-container" class="paypal-container"
+                        [hidden]="!(cart$ | async)?.items?.length || !selectedAddressId">
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+    }
+</div>
