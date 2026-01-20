@@ -32,7 +32,7 @@ export class ChatService {
   }
 
   markMessagesAsRead(conversationId: string) {
-    return this.http.put(`${this.MessageApiUrl}/${conversationId}/read`, {});
+    this.http.put(`${this.MessageApiUrl}/${conversationId}/read`, {}).subscribe();
   }
 
   sendMessage(conversationId: string, content: string) {
